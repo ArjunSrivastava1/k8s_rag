@@ -6,8 +6,7 @@
 
 <p>
   <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white" alt="Python Version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
-  <a href="https://github.com/ArjunSrivastava1/k8s-rag/actions"><img src="https://github.com/ArjunSrivastava1/k8s-rag/workflows/CI/badge.svg" alt="CI Status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
   <a href="https://huggingface.co/"><img src="https://img.shields.io/badge/🤗-HuggingFace-FFD21E" alt="HuggingFace"></a>
 </p>
 
