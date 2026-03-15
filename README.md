@@ -65,16 +65,4 @@ This project implements concepts from foundational papers:
 
 ### 📦 Installation
 
-```bash
-# Clone repository
-git clone https://github.com/ArjunSrivastava1/k8s-rag
-cd k8s-rag
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Build FAISS index from K8s docs
-python ingest.py
-
-# Start API server
-python api.py
+✨Coming soon✨: the project stands as completed however a stable version and refactoring for files, secrets and requirements needs to be performed
