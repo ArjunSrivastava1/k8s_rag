@@ -6,7 +6,7 @@
 
 <p>
   <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white" alt="Python Version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL_V2-blue.svg" alt="License"></a>
   <a href="https://huggingface.co/"><img src="https://img.shields.io/badge/🤗-HuggingFace-FFD21E" alt="HuggingFace"></a>
   <a href="#"><img src="https://img.shields.io/badge/TinyLlama-1.1B-FF6B6B?logo=huggingface&logoColor=white" alt="TinyLlama"></a>
   <a href="#"><img src="https://img.shields.io/badge/FAISS-Vector-4A90E2?logo=facebook&logoColor=white" alt="FAISS"></a>
