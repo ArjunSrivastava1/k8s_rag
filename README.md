@@ -10,18 +10,17 @@
   <a href="https://huggingface.co/"><img src="https://img.shields.io/badge/🤗-HuggingFace-FFD21E" alt="HuggingFace"></a>
   <a href="#"><img src="https://img.shields.io/badge/TinyLlama-1.1B-FF6B6B?logo=huggingface&logoColor=white" alt="TinyLlama"></a>
   <a href="#"><img src="https://img.shields.io/badge/FAISS-Vector-4A90E2?logo=facebook&logoColor=white" alt="FAISS"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Colab-Ready-F9AB00?logo=googlecolab&logoColor=white" alt="Colab"></a>
 </p>
 
 <p>
   <a href="#-about">About</a> •
   <a href="#-features">Features</a> •
   <a href="#-metrics">Metrics</a> •
-  <a href="#-research-foundation">Research</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-api-usage">API Usage</a> •
   <a href="#-evaluation">Evaluation</a> •
   <a href="#-architecture">Architecture</a> •
+  <a href="#-module-structure">Module Structure</a> •
   <a href="#-contributing">Contributing</a>
 </p>
 
@@ -48,8 +47,9 @@ Think of it as your **Kubernetes expert assistant** — ask any question, get ac
 | **🔍 Semantic Search** | FAISS vector store • Sentence-BERT embeddings • Sub-second retrieval • Top-k document selection • Score threshold filtering |
 | **🤖 RAG Pipeline** | LangChain LCEL orchestration • Context-aware generation • Source citation • Repetition penalty tuning (1.2) • Hallucination reduction |
 | **⚡ API Layer** | FastAPI endpoints • `/ask` for questions • `/health` for monitoring • JSON responses • Source attribution |
-| **📊 Evaluation** | Manual test suite (11 queries) • 91% factual accuracy • Faithfulness scoring • Answer relevance |
+| **📊 Evaluation** | Comprehensive test suite (11 queries) • 91% factual accuracy • Faithfulness scoring • Answer relevance |
 | **🧠 Research-Backed** | Implements RAG, DPR, ReAct papers • MCP-ready • Agentic foundations |
+| **📦 Modular Design** | Clean separation of concerns • Easy to extend • Production-ready |
 
 ## 📊 Metrics
 
@@ -60,14 +60,12 @@ Think of it as your **Kubernetes expert assistant** — ask any question, get ac
 | **Context Precision** | **100%** | All answers from retrieved docs |
 | **Command Accuracy** | **100%** | All kubectl commands correct |
 | **Retrieval Coverage** | **11/11 topics** | Core concepts, scaling, config, networking, storage, troubleshooting |
-| **Latency (Colab)** | 30-60s | Free tier limitation |
-| **Latency (Optimized)** | <2s | With vLLM or TGI |
 
 ### Test Results
 
 | Category | Questions | Correct | Accuracy |
-|----------|-----------|---------|----------|
-| Core Concepts | 2 | 2 | 100% |
+|----------|-----------|---------|---------|
+| Core | 2 | 2 | 100% |
 | Scaling | 2 | 2 | 100% |
 | Configuration | 2 | 2 | 100% |
 | Networking | 2 | 2 | 100% |
@@ -75,35 +73,9 @@ Think of it as your **Kubernetes expert assistant** — ask any question, get ac
 | Troubleshooting | 1 | 1 | 100% |
 | **TOTAL** | **11** | **10** | **91%** |
 
-## 📚 Research Foundation
-
-This project implements concepts from foundational papers:
-
-| Paper | Authors | Implementation |
-|-------|---------|----------------|
-| [Attention Is All You Need](https://arxiv.org/abs/1706.03762) | Vaswani et al. 2017 | Transformer foundation |
-| [RAG: Retrieval-Augmented Generation](https://arxiv.org/abs/2005.11401) | Lewis et al. 2020 | Core RAG architecture |
-| [DPR: Dense Passage Retrieval](https://arxiv.org/abs/2004.04906) | Karpukhin et al. 2020 | Dual-encoder retrieval |
-| [FAISS](https://arxiv.org/abs/1702.08734) | Johnson et al. 2017 | Billion-scale similarity search |
-| [Sentence-BERT](https://arxiv.org/abs/1908.10084) | Reimers et al. 2019 | Embedding generation |
-| [ReAct](https://arxiv.org/abs/2210.03629) | Yao et al. 2022 | Agentic reasoning |
-
 ## 🚀 Quick Start
 
 ### 📦 Installation
-
-✨**Coming soon**✨: The project is complete; a stable release with refactored files, secrets management, and requirements is in progress.
-
-### 🎯 Run in Colab
-
-1. Open the [notebook](https://colab.research.google.com/github/ArjunSrivastava1/k8s-rag/blob/main/k8s_rag.ipynb)
-2. Run all cells — the system will:
-   - Download 14 Kubernetes documentation pages
-   - Create embeddings and build FAISS index
-   - Load TinyLlama 1.1B
-   - Start answering queries
-
-### 🔧 Local Setup (with GPU)
 
 ```bash
 # Clone the repository
@@ -112,69 +84,186 @@ cd k8s-rag
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Run the notebook
-jupyter notebook k8s_rag.ipynb
 ```
 
-## 🎯 Usage
+### 🎯 Run the System
 
-### Basic Query
+```bash
+# Run the complete setup (download docs, create index, initialize LLM)
+python -m src.k8s_rag.main
+```
+
+Or use the API directly:
+
+```bash
+# Start the API server
+python -m uvicorn src.k8s_rag.api:app --host 0.0.0.0 --port 8000
+```
+
+### 💻 Usage Examples
+
+#### Python SDK
 
 ```python
-from langchain_core.prompts import ChatPromptTemplate
+from src.k8s_rag import Config, DocumentLoader, EmbeddingManager, \
+    VectorStoreManager, EnhancedRetriever, LLMManager, RAGChain
 
-# Create the RAG chain
-rag_chain = (
-    {"context": retriever | format_docs, "question": RunnablePassthrough()}
-    | prompt
-    | llm
-    | StrOutputParser()
-)
+# Initialize configuration
+config = Config()
+
+# Load and ingest documents
+loader = DocumentLoader(docs_dir=config.docs_dir)
+documents = loader.download_k8s_docs()
+vectorstore = VectorStoreManager()
+vectorstore.create_from_documents(documents)
+
+# Initialize LLM
+llm = LLMManager()
+
+# Create retriever
+retriever = EnhancedRetriever(vectorstore=vectorstore, search_threshold=0.3, top_k=3)
+
+# Create RAG chain
+rag_chain = RAGChain(retriever=retriever, llm=llm)
 
 # Ask a question
-answer = rag_chain.invoke("How do I scale a deployment?")
+answer = rag_chain.invoke("How do I scale a deployment in Kubernetes?")
 print(answer)
 ```
 
-### Sample Output
+#### API Usage
 
 ```bash
-❓ What's the difference between kubectl scale and HorizontalPodAutoscaler?
-──────────────────────────────────────────────────────────────────────────
+# Health check
+curl http://localhost:8000/health
 
-✅ Answer: kubectl scale is a manual, immediate command. HPA is a controller 
-that periodically adjusts replicas based on metrics. Use kubectl scale for 
-one-time changes; use HPA for dynamic, metric-driven autoscaling.
+# Query the system
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What is a Kubernetes Pod?"}'
+
+# Get metrics
+curl http://localhost:8000/metrics
 ```
+
+#### Interactive Notebook
+
+For an interactive experience, you can also use the Jupyter notebook:
+
+```bash
+jupyter notebook src/k8s_rag/notebook.ipynb
+```
+
+## 🎯 API Usage
+
+### Query Endpoint
+
+```bash
+curl -X POST "http://localhost:8000/query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What is the kubectl command to scale a deployment to 5 replicas?"
+  }'
+```
+
+Response:
+
+```json
+{
+  "answer": "kubectl scale deployment <name> --replicas=5",
+  "sources": [
+    "deployment-scaling"
+  ],
+  "confidence": 0.95
+}
+```
+
+### Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Response:
+
+```json
+{
+  "status": "healthy",
+  "rag_ready": true,
+  "vector_store_size": 45,
+  "llm_loaded": true
+}
+```
+
+### Interactive Documentation
+
+Visit `http://localhost:8000/docs` for Swagger UI interactive documentation.
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │   Kubernetes    │────▶│   FAISS Vector  │────▶│   TinyLlama     │
-│   Docs (14)     │     │   Store (50+    │     │   1.1B          │
-│                 │     │   chunks)       │     │   Generator     │
+│   Docs          │     │   Store         │     │   1.1B          │
+│   (14 files)    │     │   (50+ chunks)  │     │   Generator     │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
-         │                       ▲                       │
-         ▼                       │                       ▼
+          │                       ▲                       │
+          ▼                       │                       ▼
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Embeddings    │────▶│   Retriever     │────▶│   RAG Chain     │
-│   all-MiniLM    │     │   (k=3, score   │     │   (LCEL)        │
-│   -L6-v2        │     │   threshold)    │     │                 │
+│   Document      │────▶│   Embeddings    │────▶│   Retriever     │
+│   Loader        │     │   (MiniLM-L6)   │     │   (k=3, score   │
+│   (cleaning)    │     │                 │     │   threshold)    │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
+                                          │                       │
+                                          │                       ▼
+                                          └─────────────────▶  ┌─────────────────┐
+                                                               │   RAG Chain     │
+                                                               │   (LCEL)        │
+                                                               └─────────────────┘
 ```
 
 ### Component Details
 
-| Component | Implementation | Why It Works |
-|-----------|----------------|--------------|
-| **Document Loader** | Targeted scraper (14 real K8s docs) | Filtered 85%+ of navigation noise |
-| **Chunking** | 800-1000 chars, 100 overlap | Optimized for TinyLlama's context window |
-| **Embeddings** | all-MiniLM-L6-v2 (384-dim) | Compact; 0% hallucination in benchmarks |
-| **Vector Store** | FAISS with similarity search | 100% retrieval relevance |
-| **LLM** | TinyLlama 1.1B + repetition_penalty=1.2 | Fixed repetition loops |
-| **Generation** | LCEL chain with source attribution | Traceable, grounded answers |
+| Component | Module | Purpose |
+|-----------|--------|---------|
+| **Document Loader** | `document_loader.py` | Downloads and cleans K8s docs |
+| **Embeddings** | `embeddings.py` | Generates sentence embeddings |
+| **Vector Store** | `vector_store.py` | FAISS index management |
+| **Retriever** | `retriever.py` | Enhanced similarity search |
+| **LLM** | `llm.py` | TinyLlama integration |
+| **RAG Chain** | `rag_chain.py` | Question answering pipeline |
+| **API** | `api.py` | FastAPI endpoints |
+| **Evaluation** | `evaluation.py` | Test suite and metrics |
+
+## 📁 Module Structure
+
+```
+k8s_rag/
+├── __init__.py          # Package initialization
+├── config.py            # Configuration settings
+├── document_loader.py   # Document loading and cleaning
+├── embeddings.py        # Embedding model management
+├── vector_store.py      # FAISS vector store
+├── retriever.py         # Enhanced retriever
+├── llm.py               # LLM integration
+├── rag_chain.py         # RAG chain construction
+├── evaluation.py        # Evaluation suite
+├── api.py               # FastAPI endpoints
+└── main.py              # Main entry point
+```
+
+### Module Descriptions
+
+- **`config.py`**: Central configuration for all system settings
+- **`document_loader.py`**: Downloads K8s docs from official URLs and cleans them
+- **`embeddings.py`**: Manages sentence-transformer embeddings with caching
+- **`vector_store.py`**: Creates and manages FAISS vector store
+- **`retriever.py`**: Enhanced retriever with score threshold filtering
+- **`llm.py`**: Loads TinyLlama with repetition penalty optimization
+- **`rag_chain.py`**: Constructs the complete RAG pipeline
+- **`evaluation.py`**: Comprehensive test suite with 11 queries
+- **`api.py`**: FastAPI server with `/query`, `/health`, `/metrics` endpoints
+- **`main.py`**: Orchestration script to run the complete system
 
 ## 📋 Evaluation
 
@@ -208,7 +297,7 @@ The system was tested against 11 real-world Kubernetes questions across 6 catego
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines.
 
 ## 📄 License
 
